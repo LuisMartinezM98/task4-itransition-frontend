@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { replace, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Icon from "react-icons-kit";
 import { lock } from "react-icons-kit/fa/lock";
 import clienteAxios from "../config/clienteAxios";
@@ -17,7 +17,7 @@ const MySwal = withReactContent(Swal);
 const Home = () => {
   const navigate = useNavigate();
 
-  const [data, setData] = useState<UserPropsBackend[]>([]);
+  // const [data, setData] = useState<UserPropsBackend[]>([]);
   const [localData, setLocalData] = useState<UserPropsBackend[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -47,7 +47,7 @@ const Home = () => {
           config
         );
         setTotalPages(dataBack.data.totalPages);
-        setData(dataBack.data.users);
+        // setData(dataBack.data.users);
         setLocalData(dataBack.data.users);
       } catch (error) {
         console.log(error);
@@ -72,7 +72,7 @@ const Home = () => {
           config
         );
         setTotalPages(dataBack.data.totalPages);
-        setData(dataBack.data.users);
+        // setData(dataBack.data.users);
         setLocalData(dataBack.data.users);
       } catch (error) {
         console.error(error);
@@ -99,7 +99,7 @@ const Home = () => {
           config
         );
         setTotalPages(dataBack.data.totalPages);
-        setData(dataBack.data.users);
+        // setData(dataBack.data.users);
         setLocalData(dataBack.data.users);
       } catch (error) {
         console.error(error);
@@ -113,6 +113,7 @@ const Home = () => {
   const showAlert =
     (item: UserPropsBackend) =>
     async (event: React.ChangeEvent<HTMLInputElement>) => {
+      event.preventDefault();
       MySwal.fire({
         title: <p>Alert!</p>,
         text: "Are you sure to block this account?",
@@ -151,6 +152,7 @@ const Home = () => {
         }
       });
     };
+
 
   return (
     <div className="relative overflow-x-auto shadow-md sm:rounded-lg">

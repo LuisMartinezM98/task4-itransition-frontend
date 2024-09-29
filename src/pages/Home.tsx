@@ -30,7 +30,9 @@ const Home = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 
+
   useEffect(() => {
+    document.title = 'Task 4 | Home'
     const getPageParams = async () => {
       const params = new URLSearchParams(window.location.search);
       const pageParams = params.get("page");

@@ -153,6 +153,13 @@ const Form = () => {
               </span>
             </div>
           )}
+          {errorMessage.length > 0 && (
+            <div className="flex justify-center items-center">
+              <span className="bg-red-600 text-white p-2 rounded-md my-4 text-center">
+                {errorMessage}
+              </span>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <label className="font-semibold" htmlFor="name">
               Name

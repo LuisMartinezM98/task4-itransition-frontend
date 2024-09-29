@@ -16,11 +16,18 @@ import { ic_delete } from "react-icons-kit/md/ic_delete";
 
 const MySwal = withReactContent(Swal);
 
-interface JwtPayload {
-  id: number;
+export interface JwtPayload {
+  user: {
+    id: number;
+    email: string;
+    last_connection: string;
+    name: string;
+    active: boolean;
+  };
   iat: number;
   exp: number;
 }
+
 
 const Home = () => {
   const navigate = useNavigate();
@@ -136,6 +143,8 @@ const Home = () => {
         if (result.isConfirmed) {
           try {
             const token = localStorage.getItem("token");
+            if(token){
+              const decodedToken = jwtDecode<JwtPayload>(token);
             const config = {
               headers: {
                 "Content-Type": "application/json",
@@ -149,10 +158,18 @@ const Home = () => {
             );
             if (dataBack.status === 200) {
               MySwal.fire("Successful", `${dataBack.data.msg}`, "success").then(
-                () => window.location.reload()
+                () => {
+                  if(decodedToken.user.id == item.id){
+                    localStorage.removeItem('token');
+                    window.location.reload()
+                  }
+                  window.location.reload()
+                  return;
+                }
               );
               return;
             }
+          }
           } catch (error) {
             console.log(error);
             MySwal.fire("Error", "Something was wrong", "error");
@@ -166,7 +183,7 @@ const Home = () => {
   const showAlertDelete = async (item: UserPropsBackend) => {
     MySwal.fire({
       title: <p>Alert!</p>,
-      text: "Are you sure to delete this account?",
+      text: "Are you sure to delete this accounts?",
       icon: "question",
       showCancelButton: true,
       showConfirmButton: true,
@@ -178,6 +195,7 @@ const Home = () => {
           const token = localStorage.getItem("token");
           if (token) {
             const decodedToken = jwtDecode<JwtPayload>(token);
+
             const config = {
               headers: {
                 "Content-Type": "application/json",
@@ -192,7 +210,7 @@ const Home = () => {
             if (dataBack.status === 200) {
               MySwal.fire("Successful", `${dataBack.data.msg}`, "success").then(
                 () => {
-                  if (decodedToken.id == item.id) {
+                  if (decodedToken.user.id == item.id) {
                     localStorage.removeItem("token");
                     window.location.reload();
                     return;
@@ -210,8 +228,92 @@ const Home = () => {
     });
   };
 
+  const handleBlockAll = async() => {
+    MySwal.fire({
+      title: <p>Alert!</p>,
+      text: "Are you sure to block all account?",
+      icon: "warning",
+      showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+    }).then(async(result) => {
+      if(result.isConfirmed){
+        try {
+          const token = localStorage.getItem('token');
+          const config = {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          };
+          const dataBack: AxiosResponse = await clienteAxios.get("/users/block-all", config);
+          if(dataBack.status === 200) {
+            MySwal.fire("Successful", `${dataBack.data.msg}`, 'success').then(
+              () => {
+                localStorage.removeItem('token');
+                window.location.reload();
+                return;
+              }
+            )
+          }
+        } catch (error) {
+          console.log(error);
+          MySwal.fire("Error", "Something was wrong", "error");
+        }
+      }else if(result.isDismissed){
+        MySwal.fire("Cancel", "Users without changes", "error");
+      }
+    })
+  }
+  const handleActiveAll = async() => {
+    MySwal.fire({
+      title: <p>Alert!</p>,
+      text: "Are you sure to active all accounts?",
+      icon: "warning",
+      showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+    }).then(async(result) => {
+      if(result.isConfirmed){
+        try {
+          const token = localStorage.getItem('token');
+          const config = {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          };
+          const dataBack: AxiosResponse = await clienteAxios.get("/users/active-all", config);
+          if(dataBack.status === 200) {
+            MySwal.fire("Successful", `${dataBack.data.msg}`, 'success').then(
+              () => {
+                window.location.reload();
+                return;
+              }
+            )
+          }
+        } catch (error) {
+          console.log(error);
+          MySwal.fire("Error", "Something was wrong", "error");
+        }
+      }else if(result.isDismissed){
+        MySwal.fire("Cancel", "Users without changes", "error");
+      }
+    })
+  }
+
   return (
     <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+      <div className="flex justify-around">
+      <div className="font-semibold text-white px-2 hover:text-cyan-600  transition-colors ease-in-out delay-100 duration-200 cursor-pointer" onClick={() => handleBlockAll()}>
+        Block all
+      </div>
+      <div className="font-semibold text-white px-2 hover:text-cyan-600  transition-colors ease-in-out delay-100 duration-200 cursor-pointer" onClick={() => handleActiveAll()}>
+        Active all
+      </div>
+      </div>
       <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 mt-5">
         <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
           <tr className="text-center">

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Icon from "react-icons-kit";
 import { lock } from "react-icons-kit/fa/lock";
 import clienteAxios from "../config/clienteAxios";
+import { jwtDecode } from "jwt-decode";
 
 import { AxiosResponse } from "axios";
 import Swal from "sweetalert2";
@@ -11,8 +12,15 @@ import withReactContent from "sweetalert2-react-content";
 import type { UserPropsBackend } from "../types/globals";
 import { arrowLeft } from "react-icons-kit/icomoon/arrowLeft";
 import { arrowRight } from "react-icons-kit/icomoon/arrowRight";
+import { ic_delete } from "react-icons-kit/md/ic_delete";
 
 const MySwal = withReactContent(Swal);
+
+interface JwtPayload {
+  id: number;
+  iat: number;
+  exp: number;
+}
 
 const Home = () => {
   const navigate = useNavigate();
@@ -153,6 +161,52 @@ const Home = () => {
       });
     };
 
+  const showAlertDelete = async (item: UserPropsBackend) => {
+    MySwal.fire({
+      title: <p>Alert!</p>,
+      text: "Are you sure to delete this account?",
+      icon: "question",
+      showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const token = localStorage.getItem("token");
+          if (token) {
+            const decodedToken = jwtDecode<JwtPayload>(token);
+            const config = {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            };
+            const dataBack: AxiosResponse = await clienteAxios.put(
+              "/users/delete-user",
+              { id: item.id },
+              config
+            );
+            if (dataBack.status === 200) {
+              MySwal.fire("Successful", `${dataBack.data.msg}`, "success").then(
+                () => {
+                  if (decodedToken.id == item.id) {
+                    localStorage.removeItem("token");
+                    window.location.reload();
+                    return;
+                  }
+                  window.location.reload();
+                  return;
+                }
+              );
+            }
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    });
+  };
 
   return (
     <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -173,6 +227,9 @@ const Home = () => {
             </th>
             <th scope="col" className="px-2 py-3">
               Status
+            </th>
+            <th scope="col" className="px-2 py-1 w-1/12">
+              Delete
             </th>
           </tr>
         </thead>
@@ -195,9 +252,27 @@ const Home = () => {
               </th>
               <td className="px-2 py-4">{item.name}</td>
               <td className="px-2 py-4">{item.email}</td>
-              <td className="px-2 py-4 text-end">{item.last_conection}</td>
+              <td className="px-2 py-4 text-end">
+                {new Date(item.last_conection)
+                  .toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "numeric",
+                    minute: "numeric",
+                    second: "numeric",
+                    hour12: true,
+                  })
+                  .replace(",", "")}{" "}
+              </td>
               <td className="px-2 py-4 w-1/6">
                 {item.active ? "Active" : "Blocked"}
+              </td>
+              <td
+                className="px-2 py-4 text-center"
+                onClick={() => showAlertDelete(item)}
+              >
+                <Icon icon={ic_delete} size={20} />
               </td>
             </tr>
           ))}
